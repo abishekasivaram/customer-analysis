@@ -1,0 +1,16 @@
+dashboard:
+  refresh_interval_seconds: 60
+  export_formats: ["json", "csv"]
+  report_generation: true
+
+thresholds:
+  congestion: 15 # customers per zone to trigger alert
+  dwell_time_high_seconds: 120
+  dwell_time_low_seconds: 5
+  zone_activity_low: 2 # min visitors to consider active
+
+charts:
+  width: 12
+  height: 8
+  theme: "darkgrid"
+  dpi: 150

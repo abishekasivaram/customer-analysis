@@ -1,0 +1,1 @@
+# Performance & Rendering Report\n\n## Behavior Video Verification\nSTATUS : FAILED\nReason: Video rendering was explicitly skipped in `backend/run_phase2.py` (Line 52) to conserve CPU time in the batch processing script. No MP4s were generated in outputs/behavior/videos/.\n

@@ -1,0 +1,1 @@
+# Heatmap Analytics Report\n\nSTATUS : PASS\n\nGenerated 106 heatmaps using OpenCV GaussianBlur mapped to tracked bounding box centroids.\n

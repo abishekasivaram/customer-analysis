@@ -1,0 +1,1 @@
+# Behavior Analysis Report\n\n- Total Videos Processed: 11\n- Unique Customers: 16\n- Total Behaviors Detected: 50\n- Average Confidence: 0.66\n## Distribution\n- TOUCHING: 0\n- TURNING_TO_SHELF: 0\n- PICKING_AND_RETURNING: 32\n- PICKING_AND_PUTTING: 18\n- UNKNOWN: 0\n

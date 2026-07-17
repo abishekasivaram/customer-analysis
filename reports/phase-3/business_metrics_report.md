@@ -1,0 +1,21 @@
+# Business Metrics Report
+
+- **Total videos processed**: 22
+- **Total customers detected**: 33
+- **Total customer journeys**: 33
+- **Total behavior events**: 109
+- **Total product interactions**: 177
+- **Picking & Returning count**: 68
+- **Picking & Keeping count**: 41
+- **Shelf Touch count**: 0
+- **Average dwell time**: 1.24s
+- **Maximum dwell time**: 4.40s
+- **Minimum dwell time**: 0.46s
+- **Average customer visit duration**: 4.10s
+- **Average interaction duration**: 1.24s
+- **Customer conversion rate**: 0.0%
+- **Customer engagement rate**: 60.65%
+- **Repeat customer statistics**: N/A (Requires facial recognition)
+- **Most active customer**: Copy of Hafidz 2 Store-Touching-10_1
+- **Busiest time interval**: Unknown
+- **Least active time interval**: N/A

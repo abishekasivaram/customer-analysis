@@ -21,3 +21,6 @@ def setup_logger(name, log_file, level=logging.INFO):
 proc_logger = setup_logger('processing', 'processing.log')
 perf_logger = setup_logger('performance', 'performance.log')
 err_logger = setup_logger('error', 'error.log')
+bus_logger = setup_logger('business', 'business.log')
+dash_logger = setup_logger('dashboard', 'dashboard.log')
+api_logger = setup_logger('api', 'api.log')

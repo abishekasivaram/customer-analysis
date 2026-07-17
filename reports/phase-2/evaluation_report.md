@@ -1,0 +1,1 @@
+# Phase 2 Evaluation Report\n\n## Ground Truth vs Heuristic Analysis\n- Accuracy: 0.74\n- Precision: 0.20\n- Recall: 0.74\n- F1 Score: 0.31\n\n## Per-Class Detections (Heuristics)\n- TOUCHING: 0\n- TURNING_TO_SHELF: 0\n- PICKING_AND_RETURNING: 68\n- PICKING_AND_PUTTING: 41\n- UNKNOWN: 0\n

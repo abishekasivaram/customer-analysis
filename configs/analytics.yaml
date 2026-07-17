@@ -1,0 +1,31 @@
+heatmap:
+  resolution: 100
+  blur_radius: 15
+  output_resolution: [3840, 2160]
+
+visualizer:
+  trail_length: 30
+  trail_color_mode: "unique_per_track" # or "behavior_based"
+  overlay_font_size: 2.0
+  overlay_transparency: 0.7
+
+behavior_colors:
+  TOUCHING: [0, 255, 255] # Yellow (BGR)
+  TURNING_TO_SHELF: [255, 255, 0] # Cyan (BGR)
+  PICKING_AND_RETURNING: [0, 165, 255] # Orange (BGR)
+  PICKING_AND_PUTTING: [0, 255, 0] # Green (BGR)
+  UNKNOWN: [255, 255, 255] # White (BGR)
+
+zones:
+  - id: "Zone A"
+    name: "Entrance"
+    coords: [[0, 0], [960, 0], [960, 2160], [0, 2160]]
+  - id: "Zone B"
+    name: "Shelf 1"
+    coords: [[960, 0], [1920, 0], [1920, 2160], [960, 2160]]
+  - id: "Zone C"
+    name: "Shelf 2"
+    coords: [[1920, 0], [2880, 0], [2880, 2160], [1920, 2160]]
+  - id: "Zone D"
+    name: "Checkout"
+    coords: [[2880, 0], [3840, 0], [3840, 2160], [2880, 2160]]

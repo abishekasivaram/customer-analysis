@@ -1,0 +1,1 @@
+# Zone Analytics Report\n\nSTATUS : PASS\n\nZone metrics successfully computed for 22 files against 4 configured zones (Entrance, Shelf 1, Shelf 2, Checkout).\n
