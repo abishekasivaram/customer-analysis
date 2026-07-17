@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Environment Variables
+.env
+.env.local
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Datasets
+# Ignore all raw/processed video datasets
+datasets/*
+!datasets/.gitkeep
+
+# Models
+# Ignore downloaded heavy weights like yolov8n.pt
+models/*
+!models/.gitkeep
+
+# Outputs
+# Ignore all generated logs, json, csv, and annotated videos
+outputs/*
+!outputs/.gitkeep
+
+# Operating System Files
+.DS_Store
+Thumbs.db
