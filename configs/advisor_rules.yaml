@@ -1,0 +1,27 @@
+engagement:
+    low: 30
+    medium: 60
+    high: 80
+
+interaction:
+    low: 10
+    medium: 25
+    high: 50
+
+dwell_time:
+    low: 2
+    medium: 5
+    high: 10
+
+congestion:
+    warning: 60
+    critical: 85
+
+health_score:
+    warning: 70
+    critical: 50
+
+priorities:
+    critical_roi_threshold: 80
+    high_roi_threshold: 60
+    medium_roi_threshold: 40

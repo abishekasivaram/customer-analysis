@@ -123,3 +123,25 @@ def get_retail_export_json(): return {"download_url": "/outputs/business/dashboa
 def get_retail_export_csv(): return {"download_url": "/outputs/business/retail_summary.csv"}
 @app.get("/dashboard/data")
 def get_dashboard_data(): return {"status": "Available in outputs/business/dashboard_data.json"}
+
+# --- Phase 4 Endpoints ---
+@app.get("/advisor/recommendations")
+def get_advisor_recommendations(): return {"status": "Available in outputs/advisor/recommendations.json"}
+
+@app.get("/advisor/summary")
+def get_advisor_summary(): return {"status": "Available in outputs/advisor/advisor_dashboard.json"}
+
+@app.get("/advisor/store-health")
+def get_advisor_store_health(): return {"status": "Available in outputs/advisor/store_health.json"}
+
+@app.get("/advisor/alerts")
+def get_advisor_alerts(): return {"status": "Available in outputs/advisor/prioritized_alerts.json"}
+
+@app.get("/advisor/opportunities")
+def get_advisor_opportunities(): return {"status": "Available in outputs/advisor/opportunities.json"}
+
+@app.get("/advisor/executive-report")
+def get_advisor_executive_report(): return {"status": "Available in outputs/advisor/executive_summary.json"}
+
+@app.get("/advisor/business-score")
+def get_advisor_business_score(): return {"status": "Available in outputs/advisor/business_score.json"}
