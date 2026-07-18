@@ -87,10 +87,10 @@ def upload_video(background_tasks: BackgroundTasks, file: UploadFile = File(...)
     
     # Process with FFmpeg to scale and encode (as requested by user)
     processed_path = os.path.join(live_dir, file.filename)
-    # Using libx264, scaling to 1280px width (maintains aspect ratio) for accurate YOLO processing
+    # Using libx264, scaling to 640px width (maintains aspect ratio) for fast YOLO processing
     ffmpeg_cmd = [
         ffmpeg_exe, "-y", "-i", orig_path,
-        "-vf", "scale=1280:-1:flags=lanczos",
+        "-vf", "scale=640:-1:flags=lanczos",
         "-c:v", "libx264", "-preset", "fast", "-crf", "28",
         processed_path
     ]

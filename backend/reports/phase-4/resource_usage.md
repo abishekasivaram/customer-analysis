@@ -1,7 +1,7 @@
 # Performance Metrics & Resource Usage
 
 - **CPU Usage**: 0.0%
-- **RAM Usage**: 86.0%
+- **RAM Usage**: 82.3%
 - **Execution Time**: ~0.05 seconds (I/O bound)
 - **Recommendation Generation Time**: < 10ms
 - **API Latency**: < 5ms
