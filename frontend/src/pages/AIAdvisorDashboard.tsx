@@ -9,26 +9,19 @@ export default function AIAdvisorDashboard() {
 
   useEffect(() => {
     async function loadData() {
-      const recs = await fetchAPI('/advisor/recommendations');
-      if (recs) {
-        setRecommendations(recs);
-      } else {
-        // Mock fallback if API fails
-        setRecommendations([
-          {
-            recommendation_id: 'REC-001',
-            title: 'Relocate Premium Products to High Traffic Zone',
-            category: 'Layout Optimization',
-            priority: 'HIGH',
-            confidence: 92,
-            description: 'Zone C experiences high customer traffic but relatively low product interaction. Relocating premium products and improving shelf visibility could increase engagement.',
-            business_impact: 'High',
-            expected_roi: 'Increase conversion by 12%',
-            triggered_rule: 'low_engagement_high_traffic'
-          }
-        ]);
+      try {
+        const recs = await fetchAPI('/advisor/recommendations');
+        if (recs) {
+          setRecommendations(recs);
+        } else {
+          setRecommendations([]);
+        }
+      } catch (error) {
+        console.error("Failed to load recommendations", error);
+        setRecommendations([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadData();
   }, []);

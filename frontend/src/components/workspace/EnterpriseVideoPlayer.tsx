@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useTimeline } from '../../contexts/TimelineContext';
 import { Play, Pause, Maximize, SkipBack, SkipForward, Settings, Video } from 'lucide-react';
+import { API_BASE_URL } from '../../api/config';
 
 export default function EnterpriseVideoPlayer() {
-  const { currentVideoTime, setCurrentVideoTime, isPlaying, setIsPlaying, seekTo } = useTimeline();
+  const { activeSessionId, currentVideoTime, setCurrentVideoTime, isPlaying, setIsPlaying, seekTo } = useTimeline();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [viewMode, setViewMode] = useState<'original' | 'annotated' | 'split'>('annotated');
   const [playbackRate, setPlaybackRate] = useState(1.0);
@@ -41,9 +42,11 @@ export default function EnterpriseVideoPlayer() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const videoUrl = viewMode === 'original' 
-    ? 'http://localhost:8000/videos/demo/original' 
-    : 'http://localhost:8000/videos/demo/annotated';
+  const videoUrl = activeSessionId 
+    ? (viewMode === 'original' 
+      ? `${API_BASE_URL}/videos/${activeSessionId}/original` 
+      : `${API_BASE_URL}/videos/${activeSessionId}/annotated`)
+    : '';
 
   return (
     <div className="flex flex-col h-full bg-slate-900 text-white relative">
@@ -75,16 +78,24 @@ export default function EnterpriseVideoPlayer() {
       </div>
 
       {/* Video Container */}
-      <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden cursor-pointer" onClick={togglePlay}>
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          className="w-full h-full object-contain"
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={() => setIsPlaying(false)}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-        />
+      <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden group" onClick={togglePlay}>
+        {!activeSessionId ? (
+          <div className="flex flex-col items-center justify-center text-slate-500">
+            <Video className="w-12 h-12 mb-2 opacity-50" />
+            <p>Select or upload a video session to play</p>
+          </div>
+        ) : (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            className="w-full h-full object-contain"
+            onTimeUpdate={handleTimeUpdate}
+            onEnded={() => setIsPlaying(false)}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            crossOrigin="anonymous"
+          />
+        )}
       </div>
 
       {/* Custom Controls */}

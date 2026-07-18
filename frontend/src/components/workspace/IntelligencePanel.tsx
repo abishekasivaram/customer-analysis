@@ -1,20 +1,35 @@
 import React, { useState } from 'react';
 import { Lightbulb, MessageSquare, ShieldAlert, ArrowRight, User } from 'lucide-react';
 import { useTimeline } from '../../contexts/TimelineContext';
+import { API_BASE_URL } from '../../api/config';
 
 export default function IntelligencePanel() {
-  const { selectedCustomerId, setSeekTo, setIsPlaying } = useTimeline();
+  const { activeSessionId, selectedCustomerId, setSeekTo, setIsPlaying } = useTimeline();
   const [activeTab, setActiveTab] = useState<'recommendations' | 'ask_ai'>('recommendations');
   const [query, setQuery] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    fetch(`${API_BASE_URL}/advisor/recommendations`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          setRecommendations(data);
+        } else if (data && data.top_recommendations) {
+          setRecommendations(data.top_recommendations);
+        }
+      })
+      .catch(console.error);
+  }, [activeSessionId]);
 
   const handleAsk = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/ask', {
+      const res = await fetch(`${API_BASE_URL}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query })
@@ -57,47 +72,32 @@ export default function IntelligencePanel() {
 
         {activeTab === 'recommendations' && (
           <div className="flex flex-col gap-3">
-            <div className="p-3 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10 rounded-lg">
-              <div className="flex items-start gap-2 mb-2">
-                <ShieldAlert className="w-4 h-4 text-red-500 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Relocate Premium Products to Zone C</h4>
-                  <span className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wide">High Priority</span>
+            {recommendations.length > 0 ? recommendations.map((rec, idx) => (
+              <div key={idx} className={`p-3 border rounded-lg ${rec.priority === 'HIGH' ? 'border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/10' : 'border-yellow-200 dark:border-yellow-900/50 bg-yellow-50 dark:bg-yellow-900/10'}`}>
+                <div className="flex items-start gap-2 mb-2">
+                  {rec.priority === 'HIGH' ? <ShieldAlert className="w-4 h-4 text-red-500 mt-0.5" /> : <Lightbulb className="w-4 h-4 text-yellow-500 mt-0.5" />}
+                  <div>
+                    <h4 className="text-sm font-semibold text-slate-800 dark:text-white">{rec.title || rec.recommended_action || "Recommendation"}</h4>
+                    <span className={`text-[10px] font-bold uppercase tracking-wide ${rec.priority === 'HIGH' ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'}`}>{rec.priority} Priority</span>
+                  </div>
                 </div>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-                High traffic detected in Zone C but low product interaction. Relocating premium products could increase engagement by 12%.
-              </p>
-              <div className="flex justify-between items-center text-xs text-slate-500 mb-3">
-                <span className="font-mono">Confidence: 92%</span>
-                <span className="font-mono text-green-600 dark:text-green-400">ROI: +12%</span>
-              </div>
-              <button 
-                onClick={() => { setSeekTo(45); setIsPlaying(false); }}
-                className="w-full py-1.5 bg-white dark:bg-dark-bg border border-slate-200 dark:border-slate-700 rounded text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-primary-500 transition-colors"
-              >
-                View Evidence in Video
-              </button>
-            </div>
-            
-            <div className="p-3 border border-yellow-200 dark:border-yellow-900/50 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
-              <div className="flex items-start gap-2 mb-2">
-                <Lightbulb className="w-4 h-4 text-yellow-500 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-semibold text-slate-800 dark:text-white">Improve Shelf Visibility in Zone B</h4>
-                  <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">Medium Priority</span>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
+                  {rec.description || rec.reasoning?.[0] || ""}
+                </p>
+                <div className="flex justify-between items-center text-xs text-slate-500 mb-3">
+                  <span className="font-mono">Confidence: {rec.confidence}%</span>
+                  <span className="font-mono text-green-600 dark:text-green-400">ROI: {rec.estimated_roi || rec.estimated_improvement}</span>
                 </div>
+                <button 
+                  onClick={() => { setSeekTo(0); setIsPlaying(false); }}
+                  className="w-full py-1.5 bg-white dark:bg-dark-bg border border-slate-200 dark:border-slate-700 rounded text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-primary-500 transition-colors"
+                >
+                  View Evidence in Video
+                </button>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mb-3">
-                Products in Zone B have lower visibility. Rearranging shelves can improve interaction by 8%.
-              </p>
-              <button 
-                onClick={() => { setSeekTo(15); setIsPlaying(false); }}
-                className="w-full py-1.5 bg-white dark:bg-dark-bg border border-slate-200 dark:border-slate-700 rounded text-xs font-medium text-slate-700 dark:text-slate-300 hover:border-primary-500 transition-colors"
-              >
-                View Evidence in Video
-              </button>
-            </div>
+            )) : (
+              <div className="text-center text-sm text-slate-500 py-10">No recommendations available yet.</div>
+            )}
           </div>
         )}
 

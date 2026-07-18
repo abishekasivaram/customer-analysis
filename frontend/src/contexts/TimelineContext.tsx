@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface TimelineContextType {
+  activeSessionId: string | null;
+  setActiveSessionId: (id: string | null) => void;
   currentVideoTime: number;
   setCurrentVideoTime: (time: number) => void;
   isPlaying: boolean;
@@ -18,6 +20,7 @@ interface TimelineContextType {
 const TimelineContext = createContext<TimelineContextType | undefined>(undefined);
 
 export function TimelineProvider({ children }: { children: ReactNode }) {
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [currentVideoTime, setCurrentVideoTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
@@ -27,6 +30,7 @@ export function TimelineProvider({ children }: { children: ReactNode }) {
 
   return (
     <TimelineContext.Provider value={{
+      activeSessionId, setActiveSessionId,
       currentVideoTime, setCurrentVideoTime,
       isPlaying, setIsPlaying,
       selectedCustomerId, setSelectedCustomerId,

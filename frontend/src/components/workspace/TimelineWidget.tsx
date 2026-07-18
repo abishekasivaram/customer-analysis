@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTimeline } from '../../contexts/TimelineContext';
 import { Clock, User, Activity, Map, ArrowRight } from 'lucide-react';
+import { API_BASE_URL } from '../../api/config';
 
 interface Event {
   timestamp: string;
@@ -11,16 +12,30 @@ interface Event {
 }
 
 export default function TimelineWidget() {
-  const { currentVideoTime, setSeekTo, setIsPlaying, setSelectedCustomerId } = useTimeline();
+  const { activeSessionId, currentVideoTime, setSeekTo, setIsPlaying, setSelectedCustomerId } = useTimeline();
   const [events, setEvents] = useState<Event[]>([]);
   const [activeTab, setActiveTab] = useState<'timeline'|'customers'|'behaviors'|'zones'>('timeline');
 
   useEffect(() => {
-    fetch('http://localhost:8000/events/timeline')
-      .then(res => res.json())
-      .then(data => setEvents(data.events))
-      .catch(console.error);
-  }, []);
+    if (!activeSessionId) return;
+    
+    // Poll the timeline data periodically while the video is playing or just once
+    const fetchTimeline = () => {
+      fetch(`${API_BASE_URL}/timeline/${activeSessionId}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Timeline not found");
+          return res.json();
+        })
+        .then(data => {
+          if (data.events) setEvents(data.events);
+        })
+        .catch(console.error);
+    };
+    
+    fetchTimeline();
+    const interval = setInterval(fetchTimeline, 5000);
+    return () => clearInterval(interval);
+  }, [activeSessionId]);
 
   const handleEventClick = (timeSec: number, customerId: number) => {
     setSeekTo(timeSec);

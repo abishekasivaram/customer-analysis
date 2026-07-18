@@ -21,6 +21,7 @@ def process_video(video_info, model):
     
     cap = cv2.VideoCapture(filepath)
     fps = cap.get(cv2.CAP_PROP_FPS)
+    if fps <= 0: fps = 30
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     
@@ -37,6 +38,7 @@ def process_video(video_info, model):
     
     for r in results:
         frame_idx += 1
+            
         im0 = r.plot()
         out.write(im0)
         
@@ -67,6 +69,23 @@ def process_video(video_info, model):
                     
     cap.release()
     out.release()
+    
+    # Convert OpenCV output to Web-playable H264
+    proc_logger.info(f"Converting annotated video to H.264 format for web playback...")
+    import subprocess
+    import imageio_ffmpeg
+    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    
+    temp_path = str(out_path).replace(".mp4", "_temp.mp4")
+    os.rename(str(out_path), temp_path)
+    
+    ffmpeg_cmd = [
+        ffmpeg_exe, "-y", "-i", temp_path,
+        "-c:v", "libx264", "-preset", "fast", "-crf", "28",
+        str(out_path)
+    ]
+    subprocess.run(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    os.remove(temp_path)
     
     export_detections(filename, detections)
     export_tracks(filename, tracks_data)

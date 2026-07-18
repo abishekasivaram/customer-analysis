@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UploadCloud, CheckCircle2, Play, Pause, Trash2, Activity, Settings2, Loader2, ArrowRight } from 'lucide-react';
+import { API_BASE_URL } from '../../api/config';
+import { useTimeline } from '../../contexts/TimelineContext';
 
 interface Job {
   session_id: string;
@@ -15,10 +17,11 @@ export default function ProcessingSessionManager() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { activeSessionId, setActiveSessionId } = useTimeline();
 
   const fetchJobs = async () => {
     try {
-      const res = await fetch('http://localhost:8000/jobs');
+      const res = await fetch(`${API_BASE_URL}/jobs`);
       if (res.ok) {
         const data = await res.json();
         setJobs(data.jobs);
@@ -40,10 +43,16 @@ export default function ProcessingSessionManager() {
     
     setIsUploading(true);
     try {
-      const res = await fetch('http://localhost:8000/upload', {
-        method: 'POST'
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch(`${API_BASE_URL}/upload`, {
+        method: 'POST',
+        body: formData,
       });
       if (res.ok) {
+        const data = await res.json();
+        if (data.session_id) setActiveSessionId(data.session_id);
         fetchJobs();
       }
     } catch (err) {
@@ -56,7 +65,7 @@ export default function ProcessingSessionManager() {
 
   const handleAction = async (sessionId: string, action: string) => {
     try {
-      await fetch(`http://localhost:8000/jobs/${sessionId}/${action}`, { method: action === 'cancel' || action === 'resume' ? 'POST' : 'DELETE' });
+      await fetch(`${API_BASE_URL}/jobs/${sessionId}/${action}`, { method: action === 'cancel' || action === 'resume' ? 'POST' : 'DELETE' });
       fetchJobs();
     } catch (e) {}
   };
@@ -98,7 +107,15 @@ export default function ProcessingSessionManager() {
             <div className="text-center py-4 text-slate-500 text-sm">No active sessions.</div>
           )}
           {jobs.map(job => (
-            <div key={job.session_id} className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
+            <div 
+              key={job.session_id} 
+              className={`rounded-lg p-3 border cursor-pointer transition-colors ${
+                activeSessionId === job.session_id 
+                  ? 'bg-primary-50 border-primary-200 dark:bg-primary-900/20 dark:border-primary-800' 
+                  : 'bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+              onClick={() => setActiveSessionId(job.session_id)}
+            >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-primary-500" />

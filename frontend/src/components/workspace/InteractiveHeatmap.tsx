@@ -1,12 +1,9 @@
 import React from 'react';
 import { useTimeline } from '../../contexts/TimelineContext';
+import { API_BASE_URL } from '../../api/config';
 
 export default function InteractiveHeatmap() {
-  const { currentVideoTime } = useTimeline();
-
-  // Simple animation using CSS filters to simulate live heatmap changes based on video time
-  const hueRotate = Math.floor(currentVideoTime * 5) % 360;
-  const opacity = 0.5 + (Math.sin(currentVideoTime / 5) * 0.3);
+  const { currentVideoTime, activeSessionId } = useTimeline();
 
   return (
     <div className="flex flex-col h-full">
@@ -20,12 +17,26 @@ export default function InteractiveHeatmap() {
           className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-30 mix-blend-luminosity"
         />
         
-        {/* Heatmap Overlays */}
-        <div className="absolute inset-0" style={{ filter: `hue-rotate(${hueRotate}deg)` }}>
-          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-red-500 rounded-full blur-3xl" style={{ opacity }} />
-          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-yellow-500 rounded-full blur-3xl" style={{ opacity: opacity * 0.8 }} />
-          <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-green-500 rounded-full blur-3xl opacity-40" />
-          <div className="absolute top-1/3 right-1/3 w-24 h-24 bg-blue-500 rounded-full blur-2xl opacity-60" />
+        {/* Heatmap Overlay from Backend */}
+        <div className="absolute inset-0 z-0">
+          {activeSessionId ? (
+            <img 
+              src={`${API_BASE_URL}/heatmap-image/${activeSessionId}/global`} 
+              className="w-full h-full object-cover opacity-80 mix-blend-screen"
+              alt="Live Heatmap Overlay"
+              onError={(e) => {
+                // If it fails to load (e.g. hasn't been generated yet), hide the image
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+              onLoad={(e) => {
+                (e.target as HTMLImageElement).style.display = 'block';
+              }}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm bg-black/40">
+              Waiting for session data...
+            </div>
+          )}
         </div>
 
         {/* Zones */}

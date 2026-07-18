@@ -1,18 +1,56 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTimeline } from '../../contexts/TimelineContext';
 import { Users, Activity, ShoppingBag, TrendingUp, ShieldCheck } from 'lucide-react';
+import { API_BASE_URL } from '../../api/config';
 
 export default function LiveKPIDashboard() {
-  const { currentVideoTime } = useTimeline();
+  const { activeSessionId } = useTimeline();
+  
+  const [data, setData] = useState({
+    people: 0,
+    interactions: 0,
+    pickups: 0,
+    intent: 0,
+    storeHealth: 0,
+    businessScore: 0
+  });
 
-  // Simulate KPIs increasing as video progresses
-  const factor = 1 + (currentVideoTime / 100);
+  useEffect(() => {
+    if (!activeSessionId) return;
+    
+    let interval: NodeJS.Timeout;
+    
+    const fetchKPIs = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/summary/${activeSessionId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        if (data && data.people !== undefined) {
+          setData({
+            people: data.people,
+            interactions: data.interactions,
+            pickups: data.pickups,
+            intent: data.intent,
+            storeHealth: data.storeHealth || 85,
+            businessScore: data.businessScore || 82
+          });
+        }
+      } catch (e) {
+        console.error("Failed to fetch KPIs:", e);
+      }
+    };
+
+    fetchKPIs();
+    interval = setInterval(fetchKPIs, 5000);
+    return () => clearInterval(interval);
+  }, [activeSessionId]);
   
   const kpis = [
-    { title: "People Detected", value: Math.floor(128 * factor), icon: Users, color: "text-blue-500", bg: "bg-blue-100 dark:bg-blue-900/30", trend: "+18%" },
-    { title: "Interactions", value: Math.floor(256 * factor), icon: Activity, color: "text-indigo-500", bg: "bg-indigo-100 dark:bg-indigo-900/30", trend: "+24%" },
-    { title: "Pickups", value: Math.floor(57 * factor), icon: ShoppingBag, color: "text-amber-500", bg: "bg-amber-100 dark:bg-amber-900/30", trend: "+12%" },
-    { title: "Purchase Intent", value: Math.floor(38 * factor), icon: TrendingUp, color: "text-rose-500", bg: "bg-rose-100 dark:bg-rose-900/30", trend: "+8%" }
+    { title: "People Detected", value: data.people, icon: Users, color: "text-blue-500", bg: "bg-blue-100 dark:bg-blue-900/30", trend: "+18%" },
+    { title: "Interactions", value: data.interactions, icon: Activity, color: "text-indigo-500", bg: "bg-indigo-100 dark:bg-indigo-900/30", trend: "+24%" },
+    { title: "Pickups", value: data.pickups, icon: ShoppingBag, color: "text-amber-500", bg: "bg-amber-100 dark:bg-amber-900/30", trend: "+12%" },
+    { title: "Purchase Intent", value: data.intent, icon: TrendingUp, color: "text-rose-500", bg: "bg-rose-100 dark:bg-rose-900/30", trend: "+8%" }
   ];
 
   return (
@@ -44,12 +82,12 @@ export default function LiveKPIDashboard() {
           </div>
           <div>
             <div className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Store Health Score</div>
-            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">82<span className="text-xs font-normal opacity-70">/100</span></div>
+            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{data.storeHealth || '--'}<span className="text-xs font-normal opacity-70">/100</span></div>
           </div>
         </div>
         <div className="text-right">
           <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">Business Score</div>
-          <div className="text-lg font-bold text-slate-800 dark:text-white">88<span className="text-xs font-normal opacity-70">/100</span></div>
+          <div className="text-lg font-bold text-slate-800 dark:text-white">{data.businessScore || '--'}<span className="text-xs font-normal opacity-70">/100</span></div>
         </div>
       </div>
     </div>

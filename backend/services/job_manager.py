@@ -11,6 +11,7 @@ class JobStatus(BaseModel):
     started_time: float = 0
     completed_time: float = 0
     duration: float = 0
+    filepath: str = ""
     current_stage: str = "Validation"
     progress: float = 0.0
     status: str = "Queued"
@@ -41,42 +42,66 @@ def get_job(session_id: str) -> JobStatus:
 def get_all_jobs() -> List[JobStatus]:
     return list(_jobs.values())
 
-async def _simulate_pipeline(session_id: str):
+import sys
+import os
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(BASE_DIR))
+
+async def _run_pipeline(session_id: str, filepath: str = None):
     job = _jobs[session_id]
     job.status = "Running"
     job.started_time = time.time()
     
-    # Realistically, this would call actual pipeline functions.
-    # For HackZen, we simulate the progress of the pipeline to keep the demo reliable and fast.
-    
-    total_stages = len(job.stages) - 1 # Last is 'Completed'
-    
-    for i in range(total_stages):
-        if job.status == "Cancelled":
-            return
-        
-        job.current_stage = job.stages[i]
-        
-        # Simulate processing time for each stage
-        # We make it fast enough for a demo, but slow enough to see the UI update
-        duration = 2.0 if job.stages[i] != "Report Generation" else 1.0
-        
-        steps = 10
-        for step in range(steps):
-            if job.status == "Cancelled":
-                return
-            await asyncio.sleep(duration / steps)
-            job.progress = ((i * steps) + step + 1) / (total_stages * steps) * 100.0
+    try:
+        if filepath:
+            filename = os.path.basename(filepath)
+            video_info = {"filepath": filepath, "filename": filename}
             
-    job.current_stage = "Completed"
-    job.progress = 100.0
-    job.status = "Completed"
-    job.completed_time = time.time()
-    job.duration = job.completed_time - job.started_time
+            job.current_stage = "Validation"
+            job.progress = 5.0
+            await asyncio.sleep(0.5)
+            
+            job.current_stage = "YOLO Detection"
+            job.progress = 10.0
+            from backend.services.engine import initialize_model, process_video
+            model = initialize_model()
+            await asyncio.to_thread(process_video, video_info, model)
+            job.progress = 40.0
+            
+            job.current_stage = "Behavior Recognition"
+            import backend.run_phase2 as phase2
+            await asyncio.to_thread(phase2.run_phase2)
+            job.progress = 70.0
+            
+            job.current_stage = "Business Analytics"
+            import backend.run_phase3 as phase3
+            await asyncio.to_thread(phase3.run)
+            job.progress = 85.0
+            
+            job.current_stage = "Recommendation Engine"
+            import backend.run_phase4 as phase4
+            await asyncio.to_thread(phase4.run)
+            job.progress = 95.0
+            
+            job.current_stage = "Report Generation"
+            await asyncio.sleep(0.5)
+            
+        job.current_stage = "Completed"
+        job.progress = 100.0
+        job.status = "Completed"
+        job.completed_time = time.time()
+        job.duration = job.completed_time - job.started_time
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        job.status = "Cancelled"
+        job.current_stage = f"Failed: {str(e)}"
 
-def start_job(session_id: str):
-    # Kick off the async task
-    asyncio.create_task(_simulate_pipeline(session_id))
+async def start_job(session_id: str, filepath: str = None):
+    if session_id in _jobs and filepath:
+        _jobs[session_id].filepath = filepath
+    asyncio.create_task(_run_pipeline(session_id, filepath))
 
 def cancel_job(session_id: str):
     if session_id in _jobs:

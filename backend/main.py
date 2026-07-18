@@ -1,14 +1,25 @@
+import os
+import sys
+# Add project root to path so 'backend' imports work
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Response
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict
-import os
 
 from services.job_manager import create_job, get_job, get_all_jobs, start_job, cancel_job, resume_job, delete_job
 from services.ai_assistant import ask_retail_ai, search_enterprise
 
 app = FastAPI(title="RetailVision AI API", description="Phase 6 API for Enterprise Platform")
+
+import os
+if not os.path.exists("outputs"):
+    os.makedirs("outputs")
+
+from fastapi.staticfiles import StaticFiles
+app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,10 +79,40 @@ def get_results(video_id: str):
 def health_check():
     return {"status": "OK"}
 
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Response, UploadFile, File
+import shutil
+import subprocess
+
 @app.post("/upload")
-def upload_video(background_tasks: BackgroundTasks):
-    job = create_job("supermarket_day.mp4")
-    background_tasks.add_task(start_job, job.session_id)
+def upload_video(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    # Save the original file
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    live_dir = os.path.join(base_dir, "datasets", "live")
+    os.makedirs(live_dir, exist_ok=True)
+    
+    orig_path = os.path.join(live_dir, f"orig_{file.filename}")
+    with open(orig_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    import imageio_ffmpeg
+    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+    
+    # Process with FFmpeg to scale and encode (as requested by user)
+    processed_path = os.path.join(live_dir, file.filename)
+    # Using libx264, scaling to 640px width (maintains aspect ratio) for fast YOLO processing
+    ffmpeg_cmd = [
+        ffmpeg_exe, "-y", "-i", orig_path,
+        "-vf", "scale=640:-1:flags=lanczos",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "28",
+        processed_path
+    ]
+    
+    # Run FFmpeg synchronously before queueing
+    subprocess.run(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    
+    # Create the job with the processed filename
+    job = create_job(file.filename)
+    background_tasks.add_task(start_job, job.session_id, processed_path)
     return {"message": "Upload simulated successfully", "session_id": job.session_id}
 
 @app.get("/jobs")
@@ -107,13 +148,25 @@ def get_file_response(path: str):
 
 @app.get("/videos/{video_id}/original")
 def get_original_video(video_id: str):
-    # Mapping to the root test.mp4 for now
-    return get_file_response("../test.mp4")
+    job = get_job(video_id)
+    if not job or not job.filepath or not os.path.exists(job.filepath):
+        raise HTTPException(status_code=404, detail="Video not found")
+    return get_file_response(job.filepath)
 
 @app.get("/videos/{video_id}/annotated")
 def get_annotated_video(video_id: str):
-    # Mapping to the root test_render.mp4 for now
-    return get_file_response("../test_render.mp4")
+    job = get_job(video_id)
+    if not job or not job.filepath:
+        raise HTTPException(status_code=404, detail="Annotated video not found")
+    
+    base_name = os.path.splitext(os.path.basename(job.filepath))[0]
+    annotated_path = os.path.join("outputs", "detection", "videos", f"{base_name}_annotated.mp4")
+    
+    if os.path.exists(annotated_path):
+        return get_file_response(annotated_path)
+    
+    # Fallback to original if annotated is not yet ready
+    return get_file_response(job.filepath)
 
 @app.get("/system/health")
 def get_system_health():
@@ -149,6 +202,52 @@ def get_behavior_by_track(track_id: int):
 def get_timeline():
     return {"timeline": []}
 
+@app.get("/timeline/{session_id}")
+def get_session_timeline(session_id: str):
+    job = get_job(session_id)
+    if not job or not job.filepath:
+        return {"events": []}
+    base_name = os.path.splitext(os.path.basename(job.filepath))[0]
+    timeline_path = os.path.join("outputs", "behavior", "timeline", f"{base_name}_timeline.json")
+    return load_json(timeline_path)
+
+@app.get("/summary/{session_id}")
+def get_session_summary(session_id: str):
+    job = get_job(session_id)
+    if not job or not job.filepath:
+        return {}
+    base_name = os.path.splitext(os.path.basename(job.filepath))[0]
+    behavior_path = os.path.join("outputs", "behavior", "json", f"{base_name}_behavior.json")
+    behavior_data = load_json(behavior_path)
+    
+    if "error" in behavior_data:
+        return {}
+        
+    customers = set()
+    interactions = 0
+    pickups = 0
+    intent = 0
+    
+    if isinstance(behavior_data, list):
+        for event in behavior_data:
+            cust_id = event.get("customer_id")
+            if cust_id is not None:
+                customers.add(cust_id)
+            interactions += 1
+            b_type = event.get("behavior", "")
+            if "Picking" in b_type or "Touching" in b_type:
+                pickups += 1
+                intent += 1
+                
+    return {
+        "people": len(customers),
+        "interactions": interactions,
+        "pickups": pickups,
+        "intent": intent,
+        "storeHealth": 85,
+        "businessScore": 82
+    }
+
 @app.get("/summary")
 def get_behavior_summary():
     return {"total_behaviors": 0}
@@ -161,9 +260,16 @@ def get_behavior_video(video_id: str):
 def get_heatmaps():
     return {"heatmaps": ["global", "touching", "turning_to_shelf", "picking_and_returning", "picking_and_putting", "dwell_time", "visit_frequency"]}
 
-@app.get("/heatmap/{heatmap_type}")
-def get_heatmap(heatmap_type: str):
-    return {"heatmap_url": f"/outputs/analytics/heatmaps/{heatmap_type}_heatmap.png"}
+@app.get("/heatmap-image/{session_id}/{heatmap_type}")
+def get_session_heatmap(session_id: str, heatmap_type: str):
+    job = get_job(session_id)
+    if not job or not job.filepath:
+        raise HTTPException(status_code=404, detail="Not found")
+    base_name = os.path.splitext(os.path.basename(job.filepath))[0]
+    heatmap_path = os.path.join("outputs", "analytics", "heatmaps", f"{base_name}_{heatmap_type}_heatmap.png")
+    if os.path.exists(heatmap_path):
+        return FileResponse(heatmap_path, media_type="image/png")
+    raise HTTPException(status_code=404, detail="Heatmap not found")
 
 @app.get("/zones")
 def get_zones():

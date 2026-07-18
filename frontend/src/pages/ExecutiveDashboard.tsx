@@ -11,22 +11,20 @@ export default function ExecutiveDashboard() {
 
   useEffect(() => {
     async function loadData() {
-      // Mocked if API is not running, but trying API first
-      const summary = await fetchAPI('/advisor/summary');
-      const health = await fetchAPI('/advisor/store-health');
-      if (summary && health) {
-        setData({ summary, health });
-      } else {
-        // Mock fallback for UI rendering
-        setData({
-          summary: {
-            metrics: { customers: 1205, conversion_rate: '14.2%', avg_dwell_time: '5.2 min' },
-            alerts: [{ id: 1, message: 'High congestion in Zone C', priority: 'High' }]
-          },
-          health: { store_health_score: 82, status: 'Good' }
-        });
+      try {
+        const summary = await fetchAPI('/advisor/summary');
+        const health = await fetchAPI('/advisor/store-health');
+        if (summary && health) {
+          setData({ summary, health });
+        } else {
+          setData(null);
+        }
+      } catch (error) {
+        console.error("Failed to load dashboard data", error);
+        setData(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
     loadData();
   }, []);
@@ -42,6 +40,7 @@ export default function ExecutiveDashboard() {
   ];
 
   if (loading) return <div className="p-8 animate-pulse flex space-x-4">Loading Executive Dashboard...</div>;
+  if (!data) return <div className="p-8 text-slate-500">No data available or backend is not reachable.</div>;
 
   return (
     <div className="space-y-6 fade-in">

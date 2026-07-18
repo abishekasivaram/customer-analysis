@@ -4,8 +4,8 @@ ultralytics
 opencv-python
 pandas
 pydantic
-s e a b o r n  
- m a t p l o t l i b  
- p a n d a s  
- psutil  
- 
+seaborn
+matplotlib
+psutil
+python-multipart
+imageio-ffmpeg 
