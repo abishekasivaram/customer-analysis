@@ -86,9 +86,13 @@ def process_video(video_info, model, progress_callback=None):
     ffmpeg_cmd = [
         ffmpeg_exe, "-y", "-i", temp_path,
         "-c:v", "libx264", "-preset", "fast", "-crf", "28",
+        "-pix_fmt", "yuv420p",
         str(out_path)
     ]
-    subprocess.run(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        subprocess.run(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, check=True)
+    except subprocess.CalledProcessError as e:
+        err_logger.error(f"FFmpeg conversion failed: {e.stderr.decode()}")
     os.remove(temp_path)
     
     export_detections(filename, detections)

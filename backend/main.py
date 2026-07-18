@@ -206,9 +206,9 @@ def get_session_timeline(session_id: str):
         for item in data:
             start_time = item.get("start_time", 0)
             m = int(start_time // 60)
-            s = int(start_time % 60)
+            s_float = start_time % 60
             events.append({
-                "timestamp": f"{m:02d}:{s:02d}",
+                "timestamp": f"{m:02d}:{s_float:04.1f}",
                 "time_sec": start_time,
                 "customer_id": item.get("track_id", 0),
                 "event": item.get("behavior", "UNKNOWN").replace("_", " ").title(),
