@@ -7,14 +7,14 @@ from backend.services.exporter import export_detections, export_tracks
 
 def initialize_model():
     if not os.path.exists(MODEL_PATH):
-        proc_logger.info("Downloading YOLOv8n model...")
-        model = YOLO('yolov8n.pt')
+        proc_logger.info("Downloading YOLOv8s model...")
+        model = YOLO('yolov8s.pt')
         model.save(str(MODEL_PATH))
     else:
         model = YOLO(str(MODEL_PATH))
     return model
 
-def process_video(video_info, model):
+def process_video(video_info, model, progress_callback=None):
     filepath = video_info['filepath']
     filename = video_info['filename']
     base_name = os.path.splitext(filename)[0]
@@ -24,6 +24,8 @@ def process_video(video_info, model):
     if fps <= 0: fps = 30
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    if total_frames <= 0: total_frames = 1
     
     out_path = OUTPUTS_DIR / "detection" / "videos" / f"{base_name}_annotated.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -33,11 +35,13 @@ def process_video(video_info, model):
     tracks_data = []
     frame_idx = 0
     
-    # Track person class (0) with lower resolution for speed
-    results = model.track(source=filepath, conf=CONFIDENCE_THRESHOLD, classes=[0], tracker="botsort.yaml", stream=True, verbose=False, imgsz=320)
+    # Track person class (0) with higher resolution for better clarity
+    results = model.track(source=filepath, conf=CONFIDENCE_THRESHOLD, classes=[0], tracker="botsort.yaml", stream=True, verbose=False, imgsz=640)
     
     for r in results:
         frame_idx += 1
+        if progress_callback and frame_idx % 10 == 0:
+            progress_callback(frame_idx / total_frames)
             
         im0 = r.plot()
         out.write(im0)

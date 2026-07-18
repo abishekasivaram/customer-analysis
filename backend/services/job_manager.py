@@ -66,7 +66,12 @@ async def _run_pipeline(session_id: str, filepath: str = None):
             job.progress = 10.0
             from backend.services.engine import initialize_model, process_video
             model = await asyncio.to_thread(initialize_model)
-            await asyncio.to_thread(process_video, video_info, model)
+            
+            def update_progress(pct: float):
+                # Map 0.0-1.0 to 10.0-40.0
+                job.progress = 10.0 + (pct * 30.0)
+                
+            await asyncio.to_thread(process_video, video_info, model, update_progress)
             job.progress = 40.0
             
             job.current_stage = "Behavior Recognition"

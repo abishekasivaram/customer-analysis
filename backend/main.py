@@ -235,7 +235,7 @@ def get_session_summary(session_id: str):
     
     if isinstance(behavior_data, list):
         for event in behavior_data:
-            cust_id = event.get("customer_id")
+            cust_id = event.get("track_id")
             if cust_id is not None:
                 customers.add(cust_id)
             interactions += 1
@@ -248,8 +248,20 @@ def get_session_summary(session_id: str):
             elif b_type == "TOUCHING":
                 interactions += 1
                 
+    # Fix for Tracker Fragmentation inflating "People Detected"
+    tracks_path = os.path.join("outputs", "detection", "json", f"{base_name}_tracks.json")
+    tracks_data = load_json(tracks_path)
+    people_detected = len(customers)
+    if isinstance(tracks_data, list) and len(tracks_data) > 0:
+        from collections import defaultdict
+        frame_counts = defaultdict(int)
+        for t in tracks_data:
+            frame_counts[t.get("frame", 0)] += 1
+        if frame_counts:
+            people_detected = max(frame_counts.values())
+                
     return {
-        "people": len(customers),
+        "people": people_detected,
         "interactions": interactions + pickups,
         "pickups": pickups,
         "intent": intent,

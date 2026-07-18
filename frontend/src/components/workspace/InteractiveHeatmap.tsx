@@ -13,9 +13,18 @@ export default function InteractiveHeatmap() {
       </div>
       
       <div className="flex-1 bg-slate-900 rounded-lg relative overflow-hidden flex items-center justify-center min-h-[250px] border border-slate-800">
-        <div 
-          className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-30 mix-blend-luminosity"
-        />
+        {/* Background Image/Video */}
+        {activeSessionId ? (
+          <video 
+            src={`${API_BASE_URL}/videos/${activeSessionId}/original`}
+            className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-luminosity"
+            preload="metadata"
+          />
+        ) : (
+          <div 
+            className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center opacity-30 mix-blend-luminosity"
+          />
+        )}
         
         {/* Heatmap Overlay from Backend */}
         <div className="absolute inset-0 z-0">

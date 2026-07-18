@@ -1,7 +1,7 @@
 heatmap:
   resolution: 100
-  blur_radius: 15
-  output_resolution: [3840, 2160]
+  blur_radius: 5
+  output_resolution: [640, 360]
 
 visualizer:
   trail_length: 30

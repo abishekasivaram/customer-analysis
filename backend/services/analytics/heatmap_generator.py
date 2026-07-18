@@ -71,7 +71,7 @@ class HeatmapGenerator:
             
             # Link behavior
             for b in behaviors:
-                if b['track_id'] == d.get('customer_id') and b['start_frame'] <= d['frame'] <= b['end_frame']:
+                if b['track_id'] == d.get('track_id') and b['start_frame'] <= d['frame'] <= b['end_frame']:
                     beh = b['behavior']
                     if beh in behavior_pts:
                         behavior_pts[beh].append((cx, cy))

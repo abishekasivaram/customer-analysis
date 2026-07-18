@@ -2,6 +2,8 @@ import os
 import json
 import glob
 import csv
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import networkx as nx
 from backend.core.logger import bus_logger
