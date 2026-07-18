@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./outputs:/app/outputs
+      - ./datasets:/app/datasets
+      - ./test.mp4:/app/test.mp4
+      - ./test_render.mp4:/app/test_render.mp4
+    environment:
+      - ENV=production
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: always
