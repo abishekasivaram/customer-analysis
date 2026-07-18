@@ -38,6 +38,11 @@ def run():
     for i, video in enumerate(valid_videos):
         proc_logger.info(f"Processing {i+1}/{len(valid_videos)}: {video['filename']}")
         try:
+            base_name = os.path.splitext(video['filename'])[0]
+            if os.path.exists(f"outputs/detection/json/{base_name}.json"):
+                proc_logger.info(f"Skipping {video['filename']}, already processed.")
+                completed += 1
+                continue
             process_video(video, model)
             completed += 1
         except Exception as e:

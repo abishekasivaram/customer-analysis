@@ -45,7 +45,7 @@ class ChartGenerator:
         
         # 3. Detection Confidence Distribution
         plt.figure(figsize=(10, 6))
-        sns.histplot(data=df, x='confidence', bins=20, kde=True)
+        sns.histplot(data=df, x='confidence', bins='auto', kde=True)
         plt.title('Behavior Confidence Distribution')
         plt.tight_layout()
         plt.savefig(str(out_dir / f"{base_name}_confidence_distribution.png"))
@@ -54,7 +54,7 @@ class ChartGenerator:
         # 4. Track Duration Histogram
         df['duration'] = df['end_time'] - df['start_time']
         plt.figure(figsize=(10, 6))
-        sns.histplot(data=df, x='duration', bins=20)
+        sns.histplot(data=df, x='duration', bins='auto')
         plt.title('Track Duration Histogram')
         plt.xlabel('Duration (s)')
         plt.tight_layout()

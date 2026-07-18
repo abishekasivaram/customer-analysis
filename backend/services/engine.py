@@ -32,8 +32,8 @@ def process_video(video_info, model):
     tracks_data = []
     frame_idx = 0
     
-    # Track person class (0)
-    results = model.track(source=filepath, conf=CONFIDENCE_THRESHOLD, classes=[0], tracker="bytetrack.yaml", stream=True, verbose=False)
+    # Track person class (0) with reduced image size for faster processing
+    results = model.track(source=filepath, conf=CONFIDENCE_THRESHOLD, classes=[0], tracker="bytetrack.yaml", stream=True, verbose=False, imgsz=320)
     
     for r in results:
         frame_idx += 1
