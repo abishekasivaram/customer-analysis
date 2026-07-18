@@ -7,8 +7,8 @@ from backend.services.exporter import export_detections, export_tracks
 
 def initialize_model():
     if not os.path.exists(MODEL_PATH):
-        proc_logger.info("Downloading YOLOv8n model...")
-        model = YOLO('yolov8n.pt')
+        proc_logger.info("Downloading YOLOv8m model...")
+        model = YOLO('yolov8m.pt')
         model.save(str(MODEL_PATH))
     else:
         model = YOLO(str(MODEL_PATH))
@@ -33,8 +33,8 @@ def process_video(video_info, model):
     tracks_data = []
     frame_idx = 0
     
-    # Track person class (0) with reduced image size for faster processing
-    results = model.track(source=filepath, conf=CONFIDENCE_THRESHOLD, classes=[0], tracker="bytetrack.yaml", stream=True, verbose=False, imgsz=320)
+    # Track person class (0) with higher resolution for better clarity
+    results = model.track(source=filepath, conf=CONFIDENCE_THRESHOLD, classes=[0], tracker="botsort.yaml", stream=True, verbose=False, imgsz=640)
     
     for r in results:
         frame_idx += 1
@@ -89,5 +89,10 @@ def process_video(video_info, model):
     
     export_detections(filename, detections)
     export_tracks(filename, tracks_data)
+    
+    import json
+    metadata_path = OUTPUTS_DIR / "detection" / "json" / f"{base_name}_metadata.json"
+    with open(metadata_path, 'w') as f:
+        json.dump({"fps": fps}, f)
     
     proc_logger.info(f"Finished processing {filename}. Extracted {len(detections)} detections.")

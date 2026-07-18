@@ -44,7 +44,7 @@ export default function TimelineWidget() {
   };
 
   return (
-    <div className="bg-white dark:bg-dark-card rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[400px]">
+    <div className="bg-white dark:bg-dark-card rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-full min-h-[600px]">
       {/* Tabs */}
       <div className="flex border-b border-slate-200 dark:border-slate-800">
         <button 

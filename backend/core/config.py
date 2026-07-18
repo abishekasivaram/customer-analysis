@@ -27,6 +27,6 @@ os.makedirs(OUTPUTS_DIR / "advisor", exist_ok=True)
 os.makedirs(OUTPUTS_DIR / "advisor" / "reports", exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 
-CONFIDENCE_THRESHOLD = 0.5
-MODEL_NAME = "yolov8n.pt"
+CONFIDENCE_THRESHOLD = 0.25
+MODEL_NAME = "yolov8m.pt"
 MODEL_PATH = MODELS_DIR / MODEL_NAME

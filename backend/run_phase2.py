@@ -9,8 +9,8 @@ from backend.services.analytics.chart_generator import ChartGenerator
 
 def run_phase2():
     json_files = glob.glob("outputs/detection/json/*.json")
-    # Filter out the _tracks.json files, process only main detection ones
-    target_files = [f for f in json_files if not f.endswith("_tracks.json")]
+    # Filter out the _tracks.json and _metadata.json files, process only main detection ones
+    target_files = [f for f in json_files if not f.endswith("_tracks.json") and not f.endswith("_metadata.json")]
     
     print(f"Discovered {len(target_files)} videos for Phase 2 processing.")
     
@@ -23,8 +23,15 @@ def run_phase2():
         base_name = os.path.splitext(os.path.basename(j_path))[0]
         print(f"Processing behavior for: {base_name}")
         
+        import json
+        fps = 30 # default
+        metadata_path = f"outputs/detection/json/{base_name}_metadata.json"
+        if os.path.exists(metadata_path):
+            with open(metadata_path, "r") as f:
+                fps = json.load(f).get("fps", 30)
+                
         # 1. Behavior Classification
-        events = process_video_behavior(j_path)
+        events = process_video_behavior(j_path, fps=fps)
         
         if not events:
             print(f"No events found for {base_name}")

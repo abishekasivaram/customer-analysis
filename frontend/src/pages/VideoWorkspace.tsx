@@ -4,7 +4,6 @@ import ProcessingSessionManager from '../components/workspace/ProcessingSessionM
 import EnterpriseVideoPlayer from '../components/workspace/EnterpriseVideoPlayer';
 import TimelineWidget from '../components/workspace/TimelineWidget';
 import LiveKPIDashboard from '../components/workspace/LiveKPIDashboard';
-import IntelligencePanel from '../components/workspace/IntelligencePanel';
 import InteractiveHeatmap from '../components/workspace/InteractiveHeatmap';
 import { ShieldAlert, PlayCircle, Database } from 'lucide-react';
 
@@ -48,9 +47,8 @@ export default function VideoWorkspace() {
             </div>
           </div>
 
-          {/* Right Column: Intelligence & Timelines (col-span-3) */}
+          {/* Right Column: Timelines (col-span-3) */}
           <div className="lg:col-span-3 flex flex-col gap-4 overflow-y-auto pr-1 custom-scrollbar">
-            <IntelligencePanel />
             <TimelineWidget />
           </div>
           

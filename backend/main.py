@@ -40,19 +40,7 @@ def ask_ai_endpoint(req: AskRequest):
 def search_endpoint(q: str = ""):
     return {"results": search_enterprise(q)}
 
-@app.get("/events/timeline")
-def get_live_events():
-    # Return mock live events for the timeline
-    return {
-        "events": [
-            {"timestamp": "00:08", "time_sec": 8, "customer_id": 21, "event": "Entered Store", "zone": "Zone A"},
-            {"timestamp": "00:15", "time_sec": 15, "customer_id": 15, "event": "Viewed Shelf", "zone": "Zone B"},
-            {"timestamp": "00:28", "time_sec": 28, "customer_id": 8, "event": "Picked Item", "zone": "Zone C"},
-            {"timestamp": "00:41", "time_sec": 41, "customer_id": 8, "event": "Returned Item", "zone": "Zone C"},
-            {"timestamp": "00:52", "time_sec": 52, "customer_id": 32, "event": "Moved to Checkout", "zone": "Zone D"},
-            {"timestamp": "01:10", "time_sec": 70, "customer_id": 21, "event": "Exited Store", "zone": "Zone D"}
-        ]
-    }
+
 
 
 queue_status: Dict[str, str] = {}
@@ -99,10 +87,10 @@ def upload_video(background_tasks: BackgroundTasks, file: UploadFile = File(...)
     
     # Process with FFmpeg to scale and encode (as requested by user)
     processed_path = os.path.join(live_dir, file.filename)
-    # Using libx264, scaling to 640px width (maintains aspect ratio) for fast YOLO processing
+    # Using libx264, scaling to 1280px width (maintains aspect ratio) for accurate YOLO processing
     ffmpeg_cmd = [
         ffmpeg_exe, "-y", "-i", orig_path,
-        "-vf", "scale=640:-1:flags=lanczos",
+        "-vf", "scale=1280:-1:flags=lanczos",
         "-c:v", "libx264", "-preset", "fast", "-crf", "28",
         processed_path
     ]
@@ -209,7 +197,24 @@ def get_session_timeline(session_id: str):
         return {"events": []}
     base_name = os.path.splitext(os.path.basename(job.filepath))[0]
     timeline_path = os.path.join("outputs", "behavior", "timeline", f"{base_name}_timeline.json")
-    return load_json(timeline_path)
+    data = load_json(timeline_path)
+    if isinstance(data, dict) and "error" in data:
+        return {"events": []}
+        
+    events = []
+    if isinstance(data, list):
+        for item in data:
+            start_time = item.get("start_time", 0)
+            m = int(start_time // 60)
+            s = int(start_time % 60)
+            events.append({
+                "timestamp": f"{m:02d}:{s:02d}",
+                "time_sec": start_time,
+                "customer_id": item.get("track_id", 0),
+                "event": item.get("behavior", "UNKNOWN").replace("_", " ").title(),
+                "zone": "Aisle"
+            })
+    return {"events": events}
 
 @app.get("/summary/{session_id}")
 def get_session_summary(session_id: str):
@@ -235,17 +240,21 @@ def get_session_summary(session_id: str):
                 customers.add(cust_id)
             interactions += 1
             b_type = event.get("behavior", "")
-            if "Picking" in b_type or "Touching" in b_type:
+            if b_type == "PICKING_AND_PUTTING":
                 pickups += 1
                 intent += 1
+            elif b_type == "PICKING_AND_RETURNING":
+                pickups += 1
+            elif b_type == "TOUCHING":
+                interactions += 1
                 
     return {
         "people": len(customers),
-        "interactions": interactions,
+        "interactions": interactions + pickups,
         "pickups": pickups,
         "intent": intent,
-        "storeHealth": 85,
-        "businessScore": 82
+        "storeHealth": 85 + min(15, intent * 2), # Simple dynamic proxy for now
+        "businessScore": 82 + min(18, intent * 2)
     }
 
 @app.get("/summary")

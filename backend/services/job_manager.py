@@ -65,7 +65,7 @@ async def _run_pipeline(session_id: str, filepath: str = None):
             job.current_stage = "YOLO Detection"
             job.progress = 10.0
             from backend.services.engine import initialize_model, process_video
-            model = initialize_model()
+            model = await asyncio.to_thread(initialize_model)
             await asyncio.to_thread(process_video, video_info, model)
             job.progress = 40.0
             
