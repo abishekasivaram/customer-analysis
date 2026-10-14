@@ -7,8 +7,8 @@ from backend.services.exporter import export_detections, export_tracks
 
 def initialize_model():
     if not os.path.exists(MODEL_PATH):
-        proc_logger.info("Downloading YOLOv8s model...")
-        model = YOLO('yolov8s.pt')
+        proc_logger.info("Downloading YOLOv8n model...")
+        model = YOLO('yolov8n.pt')
         model.save(str(MODEL_PATH))
     else:
         model = YOLO(str(MODEL_PATH))
@@ -85,7 +85,7 @@ def process_video(video_info, model, progress_callback=None):
     
     ffmpeg_cmd = [
         ffmpeg_exe, "-y", "-i", temp_path,
-        "-c:v", "libx264", "-preset", "fast", "-crf", "28",
+        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
         "-pix_fmt", "yuv420p",
         str(out_path)
     ]

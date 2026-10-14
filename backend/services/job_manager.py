@@ -60,7 +60,24 @@ async def _run_pipeline(session_id: str, filepath: str = None):
             
             job.current_stage = "Validation"
             job.progress = 5.0
-            await asyncio.sleep(0.5)
+            
+            job.current_stage = "Preprocessing (FFmpeg)"
+            import subprocess
+            import imageio_ffmpeg
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            
+            processed_path = os.path.join(os.path.dirname(filepath), filename.replace('orig_', ''))
+            ffmpeg_cmd = [
+                ffmpeg_exe, "-y", "-i", filepath,
+                "-vf", "scale=640:-1:flags=fast_bilinear",
+                "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
+                processed_path
+            ]
+            await asyncio.to_thread(subprocess.run, ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            # Update filepath to the processed file for YOLO
+            video_info["filepath"] = processed_path
+            job.filepath = processed_path
             
             job.current_stage = "YOLO Detection"
             job.progress = 10.0

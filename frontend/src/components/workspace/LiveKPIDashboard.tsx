@@ -18,7 +18,7 @@ export default function LiveKPIDashboard() {
   useEffect(() => {
     if (!activeSessionId) return;
     
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     
     const fetchKPIs = async () => {
       try {
